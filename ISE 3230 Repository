@@ -1,0 +1,51 @@
+import cvxpy as cp
+
+#define decision variables
+Y = cp.Variable((3,5), boolean = True) #3 students, 5 colleges
+
+#Parameters
+#Budget for each student
+budgets = [250,200,300] #Sandy, John, Max
+
+#Application Fees for each college
+fees = [60, 80, 60, 75, 75] # OSU, UCLA, Perdue, CWRU, Princeton
+
+#Acceptence probabilityes for each student an college
+acceptance_probabilities = [
+    [50,20,50,20,5], #Sandy
+    [20,55,70,10,0], #John
+    [70,15,40,40,25] #Max
+]
+
+
+#Objective function: Maximize total estimated acceptence prabability
+objective = cp.Maximize(
+    sum(
+        acceptance_probabilities[i][j]*Y[i,j]
+        for i in range(3) #for each of the three students
+        for j in range(5) #for each of the colleges
+    )
+)
+
+
+#Constrains
+constraints = []
+
+#budget constraints for each student
+for i in range(3):
+    constraints.append(
+        cp.sum([fees[j] * Y[i, j] for j in range(5)]) <= budgets[i]
+    )
+
+    
+#Define the problem
+problem =cp.Problem(objective, constraints)
+
+
+#Solve the problem with GUROBI solver
+problem.solve(solver=cp.GUROBI, verbose=True)
+
+print("Maximum Total Acceptance Probability:", problem.value)
+for i in range(3):
+    for j in range(5):
+        print(f"Student {i+1} applies to College {j+1}: {int(X[i, j].value)}")
